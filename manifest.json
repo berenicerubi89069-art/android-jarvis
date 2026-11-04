@@ -1,0 +1,26 @@
+{
+  "name": "J.A.R.V.I.S. // Consola Táctica",
+  "short_name": "J.A.R.V.I.S.",
+  "description": "Asistente táctico de inteligencia artificial avanzada con soporte multimodal e integración con Google Gemini.",
+  "start_url": "jarvis.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#06090e",
+  "theme_color": "#06090e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "jarvis.ico",
+      "sizes": "256x256 128x128 64x64 32x32 16x16",
+      "type": "image/x-icon",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "jarvis.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"]
+}

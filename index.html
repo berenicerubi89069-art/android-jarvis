@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>J.A.R.V.I.S. // Consola Táctica</title>
+  <meta name="description" content="Asistente de inteligencia artificial personal avanzado inspirado en JARVIS, con ejecución 100% local en navegador y tecnología Google Gemini.">
+  <meta name="theme-color" content="#06090e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="jarvis.svg">
+  <link rel="alternate icon" type="image/x-icon" href="jarvis.ico">
+  <!-- Modular Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Hidden File Input for Attachments -->
+  <input type="file" id="filePicker" multiple style="display: none;" accept="image/*,text/*,.pdf,.py,.js,.json,.html,.css,.md,.csv,.txt">
+  <!-- Hidden File Input for Backup Import -->
+  <input type="file" id="backupImportInput" accept=".json" style="display: none;">
+
+  <!-- Main Container -->
+  <div class="app-container">
+
+    <!-- ========================================================================
+         SIDEBAR: SESSIONS, SEARCH, STORAGE & ACTIONS
+         ======================================================================== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-tag">
+          <div class="indicator-dot"></div>
+          <span>JARVIS</span>
+        </div>
+        <div class="sidebar-header-btns">
+          <button class="btn-icon" id="collapseSidebarBtn" title="Colapsar panel lateral" aria-label="Colapsar panel lateral">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-tools">
+        <button class="btn-primary" id="btnNewChat">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Nueva Sesión
+        </button>
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="sessionSearchInput" placeholder="Filtrar sesiones...">
+        </div>
+      </div>
+
+      <div class="session-panel-toggle" id="sessionPanelToggle" title="Plegar / Desplegar lista de sesiones">
+        <span class="toggle-label">
+          <span>SESIONES TÁCTICAS</span>
+          <span class="session-count" id="sessionCount">0</span>
+        </span>
+        <span class="toggle-chevron">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </span>
+      </div>
+      <div class="session-list-wrapper" id="sessionListWrapper">
+        <div class="session-list" id="sessionList">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="storage-meter">
+          <div class="storage-header">
+            <span>Almacenamiento Local</span>
+            <span id="storageLabel">0.0 MB / 20 GB</span>
+          </div>
+          <div class="storage-bar-bg" title="Límite lógico configurado: 20 GB">
+            <div class="storage-bar-fill" id="storageBarFill"></div>
+          </div>
+        </div>
+
+        <div class="sidebar-actions">
+          <button class="btn-subtle" id="btnOpenDossier" title="Ficha de Usuario y Protocolos">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>Dossier</span>
+          </button>
+          <button class="btn-subtle" id="btnOpenGlobalSearch" title="Búsqueda Global en Mensajes">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span>Buscar</span>
+          </button>
+          <button class="btn-subtle" id="btnOpenSettings" title="Configuración del Sistema">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <span>Ajustes</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Sidebar Expand Handle (visible when collapsed) -->
+    <div class="sidebar-expand-handle" id="sidebarExpandHandle" title="Expandir panel lateral">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </div>
+
+    <!-- ========================================================================
+         MAIN CONTENT AREA: TOP HUD, SPHERE CORE, CHAT, INPUT
+         ======================================================================== -->
+    <main class="main-content">
+
+      <!-- Top HUD Header -->
+      <header class="top-hud">
+        <div class="top-hud-left">
+          <button class="btn-icon mobile-menu-btn" id="openSidebarBtn" title="Abrir menú" aria-label="Abrir menú">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <div class="system-title">
+            <span id="hudAssistantName">J.A.R.V.I.S.</span>
+            <span>// MK-LXXXV</span>
+          </div>
+        </div>
+
+        <div class="top-hud-center">
+          <div class="hud-chip">
+            <div class="chip-status-dot" id="apiStatusDot"></div>
+            <span id="apiStatusText">GEMINI CONECTADO</span>
+          </div>
+          <div class="hud-chip" id="bridgeChip" style="cursor: pointer;" title="Clic para detalles del puente local OS">
+            <div class="chip-status-dot offline" id="bridgeStatusDot"></div>
+            <span id="bridgeStatusText">PUENTE OS: AISLADO</span>
+          </div>
+          <div class="hud-chip">
+            <span id="activeModelBadge">gemini-3.8-flash</span>
+          </div>
+        </div>
+
+        <div class="top-hud-right">
+          <button class="btn-icon" id="btnToggleSpeech" title="Lectura automática de respuestas (Voz)" aria-label="Lectura automática de voz">
+            <svg id="speechIconOn" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            <svg id="speechIconOff" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+          </button>
+          <button class="btn-icon" id="btnQuickBackup" title="Exportar copia de seguridad rápida (JSON)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Retrofuturistic Animated JARVIS Core Sphere -->
+      <section class="core-section" id="coreSection">
+        <button class="btn-toggle-core" id="btnToggleCore" title="Minimizar / Expandir esfera táctica">
+          <span id="toggleCoreText">MINIMIZAR</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+        </button>
+
+        <div class="core-canvas-container" id="coreCanvasContainer" title="Núcleo JARVIS - Estado del sistema">
+          <canvas id="coreCanvas" width="340" height="340"></canvas>
+        </div>
+
+        <div class="core-status-pill" id="coreStatusPill">
+          <span id="coreStatusText">EN ESPERA // SISTEMAS EN LÍNEA</span>
+        </div>
+      </section>
+
+      <!-- Chat History Container -->
+      <div class="chat-container" id="chatContainer">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Bottom Input Control Center -->
+      <footer class="input-section" id="inputSection">
+        <!-- Drag & Drop Overlay -->
+        <div class="drop-overlay" id="dropOverlay">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          <span>SUELTE SUS ARCHIVOS AQUÍ PARA ADJUNTAR</span>
+        </div>
+
+        <!-- Staged Attachments Preview -->
+        <div class="staged-files" id="stagedFilesContainer"></div>
+
+        <div class="input-container">
+          <button class="btn-action" id="btnAttachFile" title="Adjuntar archivos o imágenes (Clic o arrastrar)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+          </button>
+
+          <textarea id="chatInput" placeholder="Escriba una orden o consulta para JARVIS... (Enter para enviar, Shift+Enter para salto de línea)" rows="1"></textarea>
+
+          <div class="input-btn-group">
+            <button class="btn-action" id="btnMic" title="Dictar por voz (Reconocimiento del navegador)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+            </button>
+            <button class="btn-send" id="btnSend" title="Transmitir orden a JARVIS">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="input-hints">
+          <span>MEMORIA CONTEXTUAL: RESUMEN AUTOMÁTICO ACTIVO</span>
+          <span id="charCountHint">0 caracteres</span>
+        </div>
+      </footer>
+
+    </main>
+
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 1: SETTINGS / AJUSTES DEL SISTEMA
+       ========================================================================== -->
+  <div class="modal-backdrop" id="modalSettings">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <span>CONFIGURACIÓN DEL SISTEMA JARVIS</span>
+        </div>
+        <button class="btn-icon" data-close="modalSettings">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="info-banner">
+          La clave API y las configuraciones se almacenan exclusivamente de forma local en su navegador (IndexedDB). No se transmiten a ningún intermediario; únicamente a la API oficial de Google Gemini.
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Clave API de Google Gemini <span class="note">*Requerida</span></label>
+          <input type="password" id="inputApiKey" class="form-input" placeholder="AIzaSy...">
+          <div class="form-hint">Obténgala gratuitamente en Google AI Studio (aistudio.google.com). Se mantendrá guardada en este equipo.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Modelo de Gemini</label>
+          <select id="selectModel" class="form-select">
+            <optgroup label="Modelos Recomendados (Alta Velocidad y Estabilidad)">
+              <option value="gemini-flash-lite-latest" selected>Gemini Flash-Lite (Máxima velocidad y disponibilidad 24/7)</option>
+              <option value="gemini-flash-latest">Gemini Flash (Última versión estándar)</option>
+            </optgroup>
+            <optgroup label="Familia Gemini 3.8">
+              <option value="gemini-3.8-flash">Gemini 3.8 Flash (Última generación: Razonamiento avanzado)</option>
+              <option value="gemini-3.8-pro">Gemini 3.8 Pro (Máximo razonamiento táctico y profundidad)</option>
+            </optgroup>
+            <optgroup label="Familia Gemini 3.5">
+              <option value="gemini-3.5-flash">Gemini 3.5 Flash (Equilibrado y alta velocidad)</option>
+              <option value="gemini-3.5-pro">Gemini 3.5 Pro (Razonamiento analítico avanzado)</option>
+            </optgroup>
+            <optgroup label="Familia Gemini 2.5">
+              <option value="gemini-2.5-flash">Gemini 2.5 Flash (Alta estabilidad multimodal)</option>
+              <option value="gemini-2.5-pro">Gemini 2.5 Pro (Razonamiento complejo)</option>
+            </optgroup>
+            <optgroup label="Otras Versiones Soportadas">
+              <option value="gemini-2.0-flash">Gemini 2.0 Flash (Baja latencia)</option>
+              <option value="gemini-1.5-flash">Gemini 1.5 Flash (Gran ventana de contexto)</option>
+              <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+            </optgroup>
+            <option value="custom">Otro modelo personalizado...</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="customModelGroup" style="display: none;">
+          <label class="form-label">Identificador de modelo personalizado</label>
+          <input type="text" id="inputCustomModel" class="form-input" placeholder="p. ej. gemini-3.8-flash-thinking">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nombre del Asistente</label>
+          <input type="text" id="inputAssistantName" class="form-input" value="J.A.R.V.I.S.">
+        </div>
+
+        <!-- Voice Settings Section -->
+        <div class="form-group">
+          <label class="form-label">Voz de Síntesis del Navegador (TTS en Español)</label>
+          <div style="display: flex; gap: 8px;">
+            <select id="selectVoice" class="form-select" style="flex: 1;">
+              <option value="">Cargando voces del sistema...</option>
+            </select>
+            <button class="btn-subtle" id="btnTestVoice" style="padding: 0 12px;" type="button">Probar Voz</button>
+          </div>
+          <div class="form-hint">Utiliza el motor de síntesis local nativo de su sistema operativo. No genera costes.</div>
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <div style="font-weight: 500; font-size: 13px;">Lectura automática de respuestas</div>
+            <div class="form-hint">JARVIS reproducirá por voz cada nueva respuesta generada.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggleAutoSpeech">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Data Backup & Restore -->
+        <div style="border-top: 1px solid var(--border-dim); padding-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div class="form-label">Copia de Seguridad y Restauración Local</div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-subtle" id="btnExportBackup" style="flex: 1;" type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Exportar Todo (JSON)
+            </button>
+            <button class="btn-subtle" id="btnImportBackup" style="flex: 1;" type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Restaurar Copia (JSON)
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-subtle" data-close="modalSettings">Cancelar</button>
+        <button class="btn-primary" id="btnSaveSettings">Guardar Configuración</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 2: USER PROFILE / DOSSIER PERSONAL
+       ========================================================================== -->
+  <div class="modal-backdrop" id="modalDossier">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <span>DOSSIER PERSONAL DEL USUARIO</span>
+        </div>
+        <button class="btn-icon" data-close="modalDossier">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="info-banner">
+          Esta información se inyecta permanentemente en la memoria táctica de JARVIS. El asistente adaptará su tratamiento y contexto de respuesta basándose estrictamente en estos parámetros.
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tratamiento preferido (Cómo dirigirse a usted)</label>
+          <input type="text" id="dossierCallsign" class="form-input" placeholder="p. ej. Señor Stark / Braulio / Jefe">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Ocupación / Rol principal</label>
+          <input type="text" id="dossierOccupation" class="form-input" placeholder="p. ej. Ingeniero de Software / Estudiante / Investigador">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Dato permanente 1</label>
+          <input type="text" id="dossierFact1" class="form-input" placeholder="p. ej. Prefiero respuestas directas en código limpio sin explicaciones obvias.">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Dato permanente 2</label>
+          <input type="text" id="dossierFact2" class="form-input" placeholder="p. ej. Trabajo habitualmente en entornos Windows y Python/TypeScript.">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Dato permanente 3</label>
+          <input type="text" id="dossierFact3" class="form-input" placeholder="p. ej. Mi huso horario es UTC-6 y priorizo siempre la seguridad de datos.">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-subtle" data-close="modalDossier">Cancelar</button>
+        <button class="btn-primary" id="btnSaveDossier">Actualizar Dossier</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 3: GLOBAL SEARCH ACROSS ALL CHATS
+       ========================================================================== -->
+  <div class="modal-backdrop" id="modalSearch">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <span>BÚSQUEDA GLOBAL DE MENSAJES</span>
+        </div>
+        <button class="btn-icon" data-close="modalSearch">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="globalSearchInput" placeholder="Escriba términos para buscar en todo el historial...">
+        </div>
+
+        <div class="search-results-list" id="globalSearchResults">
+          <div style="text-align: center; color: var(--text-dim); padding: 30px; font-family: var(--font-hud); font-size: 12px;">
+            INTRODUZCA UN TÉRMINO PARA ESCANEAR EL HISTORIAL COMPLETO
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-subtle" data-close="modalSearch">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 4: OPTIONAL LOCAL OS BRIDGE DETAILS & INSTRUCTIONS
+       ========================================================================== -->
+  <div class="modal-backdrop" id="modalBridge">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+          <span>PUENTE LOCAL DEL SISTEMA OPERATIVO (OPCIONAL)</span>
+        </div>
+        <button class="btn-icon" data-close="modalBridge">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="warning-banner">
+          <strong>Seguridad y Sandbox del Navegador:</strong> Por diseño de seguridad, ninguna página web o archivo HTML abierto en el navegador puede acceder libremente a los archivos de su disco duro ni ejecutar programas en su sistema operativo sin autorización expresa.
+        </div>
+
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+          Para habilitar funciones avanzadas de control de archivos u operaciones en su equipo, se incluye el módulo complementario independiente <code>jarvis_bridge.py</code>. Este script se ejecuta localmente en su máquina y expone un puerto seguro (<code>http://127.0.0.1:8888</code>).
+        </p>
+
+        <div style="background: #040914; border: 1px solid var(--border-dim); padding: 12px; border-radius: var(--radius-sm);">
+          <div class="form-label" style="margin-bottom: 6px;">Cómo iniciar el puente local:</div>
+          <pre style="margin: 0; background: transparent; border: none; font-size: 12px; color: var(--cyan-soft);"><code>python jarvis_bridge.py</code></pre>
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <div style="font-weight: 500; font-size: 13px;">Habilitar consulta al puente local</div>
+            <div class="form-hint">JARVIS intentará conectarse a <code>http://127.0.0.1:8888</code> para verificar estado y ejecutar acciones de sistema.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggleBridgeEnabled">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0, 0, 0, 0.4); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-dim);">
+          <span style="font-family: var(--font-hud); font-size: 12px; color: var(--text-muted);">Estado actual:</span>
+          <span id="bridgeModalStatusText" style="font-family: var(--font-hud); font-size: 12px; color: var(--accent-danger);">DESCONECTADO (MODO AISLADO)</span>
+        </div>
+
+        <button class="btn-subtle" id="btnTestBridge" type="button">Probar Conexión con jarvis_bridge.py</button>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-primary" data-close="modalBridge">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Modular JavaScript Engine -->
+  <script src="app.js"></script>
+  <!-- Service Worker Registration for Android PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+          console.log('[JARVIS] PWA Service Worker activo:', reg.scope);
+        }).catch((err) => {
+          console.log('[JARVIS] Modo local sin SW:', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

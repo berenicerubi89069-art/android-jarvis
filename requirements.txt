@@ -1,0 +1,30 @@
+# ══════════════════════════════════════════════════════════════════
+# J.A.R.V.I.S. — Dependencias Python Universales
+# ══════════════════════════════════════════════════════════════════
+# Para instalar en PC: pip install -r requirements.txt
+# Para Android (Termux): pip install -r requirements-android.txt
+# ══════════════════════════════════════════════════════════════════
+
+# ── Bot de Telegram ─────────────────────────────────────────────
+python-telegram-bot[all]>=20.0
+
+# ── Cliente HTTP asíncrono ──────────────────────────────────────
+aiohttp>=3.9.0
+
+# ── Síntesis de voz (TTS) ──────────────────────────────────────
+edge-tts>=6.1.0
+
+# ── Consola y utilidades ────────────────────────────────────────
+colorama>=0.4.6
+
+# ── Google Calendar API ────────────────────────────────────────
+google-api-python-client>=2.100.0
+google-auth-httplib2>=0.2.0
+google-auth-oauthlib>=1.2.0
+
+# ── Reconocimiento y audio local (PC / Escritorio) ──────────────
+SpeechRecognition>=3.10.0
+faster-whisper>=1.0.0; sys_platform == 'win32' or sys_platform == 'linux'
+PyAudio>=0.2.14; sys_platform == 'win32'
+pygame>=2.5.0
+playsound3>=3.0.0; sys_platform == 'win32'
